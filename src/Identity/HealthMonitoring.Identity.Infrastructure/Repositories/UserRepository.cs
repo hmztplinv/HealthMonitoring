@@ -25,7 +25,7 @@ namespace HealthMonitoring.Identity.Infrastructure.Repositories
         public async Task<User> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return await _context.Users
-                .Include(u => u.UserRoles)
+                .Include(u => u.UserRoleMappings)
                 .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
         }
@@ -33,7 +33,7 @@ namespace HealthMonitoring.Identity.Infrastructure.Repositories
         public async Task<User> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
             return await _context.Users
-                .Include(u => u.UserRoles)
+                .Include(u => u.UserRoleMappings)
                 .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.UserName == username, cancellationToken);
         }
@@ -41,7 +41,7 @@ namespace HealthMonitoring.Identity.Infrastructure.Repositories
         public async Task<User> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
         {
             return await _context.Users
-                .Include(u => u.UserRoles)
+                .Include(u => u.UserRoleMappings)
                 .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
         }
@@ -49,7 +49,7 @@ namespace HealthMonitoring.Identity.Infrastructure.Repositories
         public async Task<IEnumerable<User>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             return await _context.Users
-                .Include(u => u.UserRoles)
+                .Include(u => u.UserRoleMappings)
                 .ThenInclude(ur => ur.Role)
                 .ToListAsync(cancellationToken);
         }

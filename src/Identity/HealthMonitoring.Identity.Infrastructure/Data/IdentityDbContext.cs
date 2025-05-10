@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using HealthMonitoring.Identity.Domain.Models;
 using Microsoft.EntityFrameworkCore;
+using HealthMonitoring.Identity.Domain.Models;
 
 namespace HealthMonitoring.Identity.Infrastructure.Data
 {
@@ -13,7 +14,7 @@ namespace HealthMonitoring.Identity.Infrastructure.Data
     {
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
-        public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<UserRoleMapping> UserRoles { get; set; }
 
         public IdentityDbContext(DbContextOptions<IdentityDbContext> options) : base(options)
         {

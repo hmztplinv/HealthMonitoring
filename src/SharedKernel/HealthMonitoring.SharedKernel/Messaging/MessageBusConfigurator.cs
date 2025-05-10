@@ -48,7 +48,7 @@ namespace HealthMonitoring.SharedKernel.Messaging
                         TimeSpan.FromMinutes(5),
                         TimeSpan.FromMinutes(15)));
 
-                    cfg.UseInMemoryOutbox();
+                    cfg.UseInMemoryOutbox(context);
                     
                     // Configure the endpoints by convention
                     cfg.ConfigureEndpoints(context);
