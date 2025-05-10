@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # PostgreSQL veritabanı
+  postgres:
+    image: postgres:16
+    container_name: healthmonitoring-postgres
+    environment:
+      POSTGRES_USER: healthmonitoring
+      POSTGRES_PASSWORD: P@ssw0rd
+      POSTGRES_DB: healthmonitoring
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - healthmonitoring-network
+
+  # MongoDB veritabanı
+  mongodb:
+    image: mongo:7
+    container_name: healthmonitoring-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: healthmonitoring
+      MONGO_INITDB_ROOT_PASSWORD: P@ssw0rd
+      MONGO_INITDB_DATABASE: healthmonitoring
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - healthmonitoring-network
+
+  # RabbitMQ mesajlaşma sistemi
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: healthmonitoring-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: healthmonitoring
+      RABBITMQ_DEFAULT_PASS: P@ssw0rd
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - healthmonitoring-network
+
+networks:
+  healthmonitoring-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  mongodb-data:
+  rabbitmq-data:

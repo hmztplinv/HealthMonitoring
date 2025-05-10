@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option csharp_namespace = "HealthMonitoring.SharedKernel.Protos";
+
+package vital;
+
+// Service for streaming vital sign data
+service VitalDataService {
+  // Stream to receive vital sign data in real-time
+  rpc StreamVitalData (stream VitalDataRequest) returns (stream VitalDataResponse);
+  
+  // Get a single vital data point
+  rpc GetVitalData (VitalDataRequest) returns (VitalDataResponse);
+}
+
+// Request message for vital data
+message VitalDataRequest {
+  string patient_id = 1;
+  string device_id = 2;
+  int32 vital_type = 3;
+  double value = 4;
+  int64 timestamp = 5;
+}
+
+// Response message for vital data
+message VitalDataResponse {
+  string id = 1;
+  string patient_id = 2;
+  string device_id = 3;
+  int32 vital_type = 4;
+  double value = 5;
+  int64 timestamp = 6;
+  int32 alert_level = 7;
+  string message = 8;
+}

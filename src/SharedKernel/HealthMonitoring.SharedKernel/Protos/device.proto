@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+option csharp_namespace = "HealthMonitoring.SharedKernel.Protos";
+
+package device;
+
+// Service for managing devices
+service DeviceService {
+  // Register a new device
+  rpc RegisterDevice (RegisterDeviceRequest) returns (DeviceResponse);
+  
+  // Get device details
+  rpc GetDevice (GetDeviceRequest) returns (DeviceResponse);
+  
+  // Update device status
+  rpc UpdateDeviceStatus (UpdateDeviceStatusRequest) returns (DeviceResponse);
+  
+  // Stream device status updates
+  rpc StreamDeviceStatus (GetDeviceRequest) returns (stream DeviceStatusResponse);
+}
+
+// Request to register a new device
+message RegisterDeviceRequest {
+  string serial_number = 1;
+  int32 device_type = 2;
+  string model = 3;
+  string firmware_version = 4;
+}
+
+// Request to get a device
+message GetDeviceRequest {
+  string device_id = 1;
+}
+
+// Request to update device status
+message UpdateDeviceStatusRequest {
+  string device_id = 1;
+  bool is_active = 2;
+  string status_message = 3;
+  double battery_level = 4;
+}
+
+// Response with device details
+message DeviceResponse {
+  string id = 1;
+  string serial_number = 2;
+  int32 device_type = 3;
+  string model = 4;
+  string firmware_version = 5;
+  bool is_active = 6;
+  string status_message = 7;
+  double battery_level = 8;
+  int64 last_connection_time = 9;
+}
+
+// Response with device status
+message DeviceStatusResponse {
+  string device_id = 1;
+  bool is_active = 2;
+  string status_message = 3;
+  double battery_level = 4;
+  int64 timestamp = 5;
+}
