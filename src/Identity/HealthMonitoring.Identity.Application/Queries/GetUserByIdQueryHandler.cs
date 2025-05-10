@@ -41,7 +41,7 @@ namespace HealthMonitoring.Identity.Application.Handlers.Queries
                 LastLoginDate = user.LastLoginDate,
                 CreatedAt = user.CreatedAt,
                 UpdatedAt = user.UpdatedAt,
-                UserRoles = user.UserRoles.Select(ur => new UserRoleDto
+                UserRoles = user.UserRoleMappings.Select(ur => new UserRoleDto
                 {
                     Id = ur.Id,
                     UserId = ur.UserId,

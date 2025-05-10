@@ -74,7 +74,7 @@ namespace HealthMonitoring.Identity.Application.Handlers.Authentication
             };
 
             // Add role claims
-            foreach (var userRole in user.UserRoles)
+            foreach (var userRole in user.UserRoleMappings)
             {
                 claims.Add(new Claim(ClaimTypes.Role, userRole.Role.Name));
             }
@@ -91,7 +91,7 @@ namespace HealthMonitoring.Identity.Application.Handlers.Authentication
                 UserId = user.Id,
                 Username = user.UserName,
                 Email = user.Email,
-                Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList()
+                Roles = user.UserRoleMappings.Select(ur => ur.Role.Name).ToList()
             };
 
             return Result<AuthenticationResult>.Success(authResult);
