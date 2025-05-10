@@ -23,7 +23,7 @@ namespace HealthMonitoring.Identity.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
+            modelBuilder.Ignore<HealthMonitoring.SharedKernel.EventModels.BaseDomainEvent>();
             // User configuration
             modelBuilder.Entity<User>(entity =>
             {
