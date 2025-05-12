@@ -1,18 +1,33 @@
 version: '3.8'
 
 services:
-  # PostgreSQL veritabanı
-  postgres:
+  # Identity mikroservisi için PostgreSQL veritabanı
+  identity-postgres:
     image: postgres:16
-    container_name: healthmonitoring-postgres
+    container_name: healthmonitoring-identity-postgres
     environment:
       POSTGRES_USER: healthmonitoring
       POSTGRES_PASSWORD: P@ssw0rd
-      POSTGRES_DB: healthmonitoring
+      POSTGRES_DB: identity
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - identity-postgres-data:/var/lib/postgresql/data
+    networks:
+      - healthmonitoring-network
+
+  # Organisation mikroservisi için PostgreSQL veritabanı
+  organisation-postgres:
+    image: postgres:16
+    container_name: healthmonitoring-organisation-postgres
+    environment:
+      POSTGRES_USER: healthmonitoring
+      POSTGRES_PASSWORD: P@ssw0rd
+      POSTGRES_DB: organisation
+    ports:
+      - "5433:5432"  # Farklı bir port kullanıyoruz, çünkü host üzerinde aynı portu birden fazla container kullanamaz
+    volumes:
+      - organisation-postgres-data:/var/lib/postgresql/data
     networks:
       - healthmonitoring-network
 
@@ -51,6 +66,7 @@ networks:
     driver: bridge
 
 volumes:
-  postgres-data:
+  identity-postgres-data:
+  organisation-postgres-data:
   mongodb-data:
   rabbitmq-data:
