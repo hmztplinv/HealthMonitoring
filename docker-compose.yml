@@ -30,6 +30,21 @@ services:
       - organisation-postgres-data:/var/lib/postgresql/data
     networks:
       - healthmonitoring-network
+  
+  # Patient mikroservisi için PostgreSQL veritabanı
+  patient-postgres:
+    image: postgres:16
+    container_name: healthmonitoring-patient-postgres
+    environment:
+      POSTGRES_USER: healthmonitoring
+      POSTGRES_PASSWORD: P@ssw0rd
+      POSTGRES_DB: patient
+    ports:
+      - "5434:5432"  # Farklı bir port kullanıyoruz
+    volumes:
+      - patient-postgres-data:/var/lib/postgresql/data
+    networks:
+      - healthmonitoring-network
 
   # MongoDB veritabanı
   mongodb:
@@ -68,5 +83,7 @@ networks:
 volumes:
   identity-postgres-data:
   organisation-postgres-data:
+  patient-postgres-data:
   mongodb-data:
   rabbitmq-data:
+  
