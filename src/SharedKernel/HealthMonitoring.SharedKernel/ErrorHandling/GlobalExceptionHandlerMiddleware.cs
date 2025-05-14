@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace HealthMonitoring.SharedKernel.ErrorHandling
 {
@@ -31,7 +32,15 @@ namespace HealthMonitoring.SharedKernel.ErrorHandling
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An unhandled exception occurred");
+                string correlationId = context.Items.TryGetValue("CorrelationId", out var corrId) ? corrId.ToString() : "unknown";
+                string requestPath = context.Request.Path;
+                string requestMethod = context.Request.Method;
+                
+                // Log the exception with details
+                _logger.LogError(ex, 
+                    "An unhandled exception occurred during {RequestMethod} {RequestPath} with CorrelationId {CorrelationId}",
+                    requestMethod, requestPath, correlationId);
+                
                 await HandleExceptionAsync(context, ex);
             }
         }
@@ -51,10 +60,15 @@ namespace HealthMonitoring.SharedKernel.ErrorHandling
 
             context.Response.StatusCode = (int)statusCode;
 
+            var correlationId = context.Items.TryGetValue("CorrelationId", out var corrId) ? corrId.ToString() : null;
+
             object response = new
             {
                 statusCode = (int)statusCode,
-                message = exception.Message
+                message = exception.Message,
+                correlationId = correlationId,
+                exceptionType = exception.GetType().Name,
+                stackTrace = context.Request.Headers["X-Debug"] == "true" ? exception.StackTrace : null
             };
 
             if (exception is ValidationException validationException)
@@ -63,7 +77,10 @@ namespace HealthMonitoring.SharedKernel.ErrorHandling
                 {
                     statusCode = (int)statusCode,
                     message = exception.Message,
-                    errors = validationException.Errors
+                    correlationId = correlationId,
+                    exceptionType = exception.GetType().Name,
+                    errors = validationException.Errors,
+                    stackTrace = context.Request.Headers["X-Debug"] == "true" ? exception.StackTrace : null
                 };
             }
 
