@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using HealthMonitoring.Organisation.Consumers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,7 +85,12 @@ builder.Services.ConfigureMessageBus(
     builder.Configuration["MessageBus:Host"],
     builder.Configuration["MessageBus:Username"],
     builder.Configuration["MessageBus:Password"],
-    builder.Configuration["MessageBus:VirtualHost"]);
+    builder.Configuration["MessageBus:VirtualHost"],
+    busConfig =>
+    {
+        // Event consumer'ları kaydet
+        busConfig.AddConsumer<UserCreatedEventConsumer>();
+    });
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");

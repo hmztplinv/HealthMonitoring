@@ -6,7 +6,10 @@ using FluentValidation;
 using HealthMonitoring.Organisation.Features.Staff.Models;
 using HealthMonitoring.Organisation.Infrastructure.Data;
 using HealthMonitoring.SharedKernel.DomainModels.Enums;
+using HealthMonitoring.SharedKernel.EventModels;
+using HealthMonitoring.SharedKernel.Messaging;
 using HealthMonitoring.SharedKernel.Results;
+using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -55,10 +58,17 @@ namespace HealthMonitoring.Organisation.Features.Staff.Commands
     public class CreateStaffMemberCommandHandler : IRequestHandler<CreateStaffMemberCommand, Result<Guid>>
     {
         private readonly OrganisationDbContext _context;
+        private readonly IPublishEndpoint _publishEndpoint;
+        private readonly ILogger<CreateStaffMemberCommandHandler> _logger;
 
-        public CreateStaffMemberCommandHandler(OrganisationDbContext context)
+        public CreateStaffMemberCommandHandler(
+            OrganisationDbContext context,
+            IPublishEndpoint publishEndpoint,
+            ILogger<CreateStaffMemberCommandHandler> logger)
         {
             _context = context;
+            _publishEndpoint = publishEndpoint;
+            _logger = logger;
         }
 
         public async Task<Result<Guid>> Handle(CreateStaffMemberCommand request, CancellationToken cancellationToken)
@@ -102,6 +112,17 @@ namespace HealthMonitoring.Organisation.Features.Staff.Commands
                 request.DepartmentId,
                 request.StaffRole,
                 request.LicenseNumber);
+
+            // Event yayınlama
+            var staffCreatedEvent = new StaffCreatedEvent(
+                staffMember.Id,
+                staffMember.UserId,
+                staffMember.FirstName,
+                staffMember.LastName,
+                staffMember.DepartmentId,
+                staffMember.StaffRole);
+                
+            await _publishEndpoint.PublishEventWithLogging(staffCreatedEvent, _logger);
 
             // Add to database
             await _context.StaffMembers.AddAsync(staffMember, cancellationToken);

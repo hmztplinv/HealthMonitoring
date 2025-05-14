@@ -168,5 +168,20 @@ namespace HealthMonitoring.Identity.API.Controllers
 
             return NoContent();
         }
+
+        [HttpDelete("{id:guid}")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var command = new DeleteUserCommand { Id = id };
+            var result = await _deleteUserHandler.Handle(command, default);
+
+            if (result.IsFailure)
+            {
+                return BadRequest(new { errors = result.Errors });
+            }
+
+            return NoContent();
+        }
     }
 }

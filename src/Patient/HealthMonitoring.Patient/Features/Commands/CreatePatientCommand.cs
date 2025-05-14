@@ -3,7 +3,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
 using HealthMonitoring.Patient.Infrastructure.Data;
+using HealthMonitoring.SharedKernel.EventModels;
+using HealthMonitoring.SharedKernel.Messaging;
 using HealthMonitoring.SharedKernel.Results;
+using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -74,10 +77,17 @@ namespace HealthMonitoring.Patient.Features.Patients.Commands
     public class CreatePatientCommandHandler : IRequestHandler<CreatePatientCommand, Result<Guid>>
     {
         private readonly PatientDbContext _context;
+        private readonly IPublishEndpoint _publishEndpoint;
+        private readonly ILogger<CreatePatientCommandHandler> _logger;
 
-        public CreatePatientCommandHandler(PatientDbContext context)
+        public CreatePatientCommandHandler(
+            PatientDbContext context,
+            IPublishEndpoint publishEndpoint,
+            ILogger<CreatePatientCommandHandler> logger)
         {
             _context = context;
+            _publishEndpoint = publishEndpoint;
+            _logger = logger;
         }
 
         public async Task<Result<Guid>> Handle(CreatePatientCommand request, CancellationToken cancellationToken)
@@ -117,6 +127,15 @@ namespace HealthMonitoring.Patient.Features.Patients.Commands
                 request.Email,
                 request.EmergencyContactName,
                 request.EmergencyContactPhone);
+
+            // Event yayınlama
+            var patientCreatedEvent = new PatientCreatedEvent(
+                patient.Id,
+                patient.UserId,
+                patient.FirstName,
+                patient.LastName);
+                
+            await _publishEndpoint.PublishEventWithLogging(patientCreatedEvent, _logger);
 
             // Veritabanına ekle
             await _context.Patients.AddAsync(patient, cancellationToken);

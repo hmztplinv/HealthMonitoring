@@ -126,5 +126,20 @@ namespace HealthMonitoring.Patient.Features.Patients
 
             return NoContent();
         }
+
+        [HttpDelete("{id:guid}")]
+        [Authorize(Roles = "Administrator,Doctor")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var command = new DeletePatientCommand { Id = id };
+            var result = await _mediator.Send(command);
+
+            if (result.IsFailure)
+            {
+                return BadRequest(new { errors = result.Errors });
+            }
+
+            return NoContent();
+        }
     }
 }

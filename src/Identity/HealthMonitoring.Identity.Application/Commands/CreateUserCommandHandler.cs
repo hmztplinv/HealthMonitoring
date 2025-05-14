@@ -2,10 +2,14 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using HealthMonitoring.Identity.Application.Commands;
+using HealthMonitoring.Identity.Domain.Events;
 using HealthMonitoring.Identity.Domain.Models;
 using HealthMonitoring.Identity.Domain.Services;
 using HealthMonitoring.SharedKernel.Helpers;
+using HealthMonitoring.SharedKernel.Messaging;
 using HealthMonitoring.SharedKernel.Results;
+using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace HealthMonitoring.Identity.Application.Handlers.Commands
 {
@@ -15,10 +19,17 @@ namespace HealthMonitoring.Identity.Application.Handlers.Commands
     public class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Result<Guid>>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IPublishEndpoint _publishEndpoint;
+        private readonly ILogger<CreateUserCommandHandler> _logger;
 
-        public CreateUserCommandHandler(IUnitOfWork unitOfWork)
+        public CreateUserCommandHandler(
+            IUnitOfWork unitOfWork,
+            IPublishEndpoint publishEndpoint,
+            ILogger<CreateUserCommandHandler> logger)
         {
             _unitOfWork = unitOfWork;
+            _publishEndpoint = publishEndpoint;
+            _logger = logger;
         }
 
         public async Task<Result<Guid>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -58,6 +69,17 @@ namespace HealthMonitoring.Identity.Application.Handlers.Commands
             // Add user to database
             await _unitOfWork.Users.AddAsync(user, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Publish event
+            var userCreatedEvent = new UserCreatedEvent(
+                user.Id,
+                user.UserName,
+                user.Email,
+                user.FirstName,
+                user.LastName,
+                request.RoleIds ?? Array.Empty<Guid>());
+                
+            await _publishEndpoint.PublishEventWithLogging(userCreatedEvent, _logger);
 
             return Result<Guid>.Success(user.Id);
         }

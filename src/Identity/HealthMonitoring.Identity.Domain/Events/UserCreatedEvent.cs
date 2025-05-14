@@ -12,7 +12,7 @@ namespace HealthMonitoring.Identity.Domain.Events
         public string Username { get; }
         public string Email { get; }
         
-        public UserCreatedEvent(Guid userId, string username, string email)
+        public UserCreatedEvent(Guid userId, string username, string email, string firstName)
         {
             UserId = userId;
             Username = username;
