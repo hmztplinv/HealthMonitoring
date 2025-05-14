@@ -2,7 +2,9 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using HealthMonitoring.ApiGateway.Models;
+using HealthMonitoring.SharedKernel.Authentication;
 using HealthMonitoring.SharedKernel.Results;
+using Microsoft.Extensions.Configuration;
 
 namespace HealthMonitoring.ApiGateway.Saga.Steps
 {
@@ -10,14 +12,17 @@ namespace HealthMonitoring.ApiGateway.Saga.Steps
     {
         private readonly HttpClient _organisationHttpClient;
         private readonly ILogger<CreateStaffMemberStep> _logger;
+        private readonly IConfiguration _configuration;
         private Guid _createdStaffId;
 
         public CreateStaffMemberStep(
             IHttpClientFactory httpClientFactory,
-            ILogger<CreateStaffMemberStep> logger)
+            ILogger<CreateStaffMemberStep> logger,
+            IConfiguration configuration)
         {
             _organisationHttpClient = httpClientFactory.CreateClient("OrganisationService");
             _logger = logger;
+            _configuration = configuration;
         }
 
         public async Task<Result<Guid>> ExecuteAsync(CreateStaffUserRequest data)
@@ -25,6 +30,33 @@ namespace HealthMonitoring.ApiGateway.Saga.Steps
             try
             {
                 _logger.LogInformation("Creating staff member in Organisation service");
+                
+                // Generate an admin token for service-to-service communication
+                var jwtSettings = _configuration.GetSection("JwtSettings");
+                var key = jwtSettings["Key"];
+                var issuer = jwtSettings["Issuer"];
+                var audience = jwtSettings["Audience"];
+                
+                // Create a token with Administrator role
+                var adminClaims = new Dictionary<string, object>
+                {
+                    { "role", "Administrator" }
+                };
+                
+                var token = JwtTokenHelper.GenerateJwtToken(
+                    Guid.NewGuid().ToString(),
+                    "Service Account",
+                    "ApiGateway",
+                    adminClaims,
+                    key,
+                    issuer,
+                    audience,
+                    TimeSpan.FromMinutes(5)
+                );
+                
+                // Set the authorization header
+                _organisationHttpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                 
                 // Organisation servisine gönderilecek komut
                 var createStaffCommand = new
@@ -79,6 +111,33 @@ namespace HealthMonitoring.ApiGateway.Saga.Steps
                 if (_createdStaffId != Guid.Empty)
                 {
                     _logger.LogInformation($"Compensating by deleting staff member with ID: {_createdStaffId}");
+                    
+                    // Generate a new admin token for compensation
+                    var jwtSettings = _configuration.GetSection("JwtSettings");
+                    var key = jwtSettings["Key"];
+                    var issuer = jwtSettings["Issuer"];
+                    var audience = jwtSettings["Audience"];
+                    
+                    // Create a token with Administrator role
+                    var adminClaims = new Dictionary<string, object>
+                    {
+                        { "role", "Administrator" }
+                    };
+                    
+                    var token = JwtTokenHelper.GenerateJwtToken(
+                        Guid.NewGuid().ToString(),
+                        "Service Account",
+                        "ApiGateway",
+                        adminClaims,
+                        key,
+                        issuer,
+                        audience,
+                        TimeSpan.FromMinutes(5)
+                    );
+                    
+                    // Set the authorization header
+                    _organisationHttpClient.DefaultRequestHeaders.Authorization = 
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                     
                     // Organisation servisine silme isteği gönder
                     var response = await _organisationHttpClient.DeleteAsync($"api/staff/{_createdStaffId}");

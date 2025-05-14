@@ -3,7 +3,9 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using HealthMonitoring.ApiGateway.Models;
+using HealthMonitoring.SharedKernel.Authentication;
 using HealthMonitoring.SharedKernel.Results;
+using Microsoft.Extensions.Configuration;
 
 namespace HealthMonitoring.ApiGateway.Saga.Steps
 {
@@ -11,14 +13,17 @@ namespace HealthMonitoring.ApiGateway.Saga.Steps
     {
         private readonly HttpClient _identityHttpClient;
         private readonly ILogger<CreateUserStep> _logger;
+        private readonly IConfiguration _configuration;
         private Guid _createdUserId;
 
         public CreateUserStep(
             IHttpClientFactory httpClientFactory,
-            ILogger<CreateUserStep> logger)
+            ILogger<CreateUserStep> logger,
+            IConfiguration configuration)
         {
             _identityHttpClient = httpClientFactory.CreateClient("IdentityService");
             _logger = logger;
+            _configuration = configuration;
         }
 
         public async Task<Result<Guid>> ExecuteAsync(CreateStaffUserRequest data)
@@ -26,6 +31,33 @@ namespace HealthMonitoring.ApiGateway.Saga.Steps
             try
             {
                 _logger.LogInformation("Creating user in Identity service");
+                
+                // Generate an admin token for service-to-service communication
+                var jwtSettings = _configuration.GetSection("JwtSettings");
+                var key = jwtSettings["Key"];
+                var issuer = jwtSettings["Issuer"];
+                var audience = jwtSettings["Audience"];
+                
+                // Create a token with Administrator role
+                var adminClaims = new Dictionary<string, object>
+                {
+                    { "role", "Administrator" }
+                };
+                
+                var token = JwtTokenHelper.GenerateJwtToken(
+                    Guid.NewGuid().ToString(),
+                    "Service Account",
+                    "ApiGateway",
+                    adminClaims,
+                    key,
+                    issuer,
+                    audience,
+                    TimeSpan.FromMinutes(5)
+                );
+                
+                // Set the authorization header
+                _identityHttpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                 
                 // Identity servisine gönderilecek komut
                 var createUserCommand = new
@@ -53,6 +85,9 @@ namespace HealthMonitoring.ApiGateway.Saga.Steps
                     _createdUserId = JsonSerializer.Deserialize<Guid>(responseContent, 
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                     
+                    // Oluşturulan kullanıcı ID'sini data nesnesine ata
+                    data.UserId = _createdUserId;
+                    
                     _logger.LogInformation($"User created successfully with ID: {_createdUserId}");
                     return Result<Guid>.Success(_createdUserId);
                 }
@@ -79,6 +114,33 @@ namespace HealthMonitoring.ApiGateway.Saga.Steps
                 if (_createdUserId != Guid.Empty)
                 {
                     _logger.LogInformation($"Compensating by deleting user with ID: {_createdUserId}");
+                    
+                    // Generate a new admin token for compensation
+                    var jwtSettings = _configuration.GetSection("JwtSettings");
+                    var key = jwtSettings["Key"];
+                    var issuer = jwtSettings["Issuer"];
+                    var audience = jwtSettings["Audience"];
+                    
+                    // Create a token with Administrator role
+                    var adminClaims = new Dictionary<string, object>
+                    {
+                        { "role", "Administrator" }
+                    };
+                    
+                    var token = JwtTokenHelper.GenerateJwtToken(
+                        Guid.NewGuid().ToString(),
+                        "Service Account",
+                        "ApiGateway",
+                        adminClaims,
+                        key,
+                        issuer,
+                        audience,
+                        TimeSpan.FromMinutes(5)
+                    );
+                    
+                    // Set the authorization header
+                    _identityHttpClient.DefaultRequestHeaders.Authorization = 
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                     
                     // Identity servisine silme isteği gönder
                     var response = await _identityHttpClient.DeleteAsync($"api/users/{_createdUserId}");
