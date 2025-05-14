@@ -22,6 +22,8 @@ namespace HealthMonitoring.Identity.API.Controllers
         private readonly IQueryHandler<GetUserByIdQuery, HealthMonitoring.SharedKernel.Results.Result<Application.DTOs.UserDto>> _getUserByIdHandler;
         private readonly IQueryHandler<GetUserByUsernameQuery, HealthMonitoring.SharedKernel.Results.Result<Application.DTOs.UserDto>> _getUserByUsernameHandler;
         private readonly IQueryHandler<GetAllUsersQuery, HealthMonitoring.SharedKernel.Results.Result<System.Collections.Generic.List<Application.DTOs.UserDto>>> _getAllUsersHandler;
+        private readonly ICommandHandler<DeleteUserCommand, HealthMonitoring.SharedKernel.Results.Result> _deleteUserHandler;
+
 
         public UsersController(
             ICommandHandler<CreateUserCommand, HealthMonitoring.SharedKernel.Results.Result<Guid>> createUserHandler,
@@ -31,7 +33,8 @@ namespace HealthMonitoring.Identity.API.Controllers
             ICommandHandler<RemoveRoleCommand, HealthMonitoring.SharedKernel.Results.Result> removeRoleHandler,
             IQueryHandler<GetUserByIdQuery, HealthMonitoring.SharedKernel.Results.Result<Application.DTOs.UserDto>> getUserByIdHandler,
             IQueryHandler<GetUserByUsernameQuery, HealthMonitoring.SharedKernel.Results.Result<Application.DTOs.UserDto>> getUserByUsernameHandler,
-            IQueryHandler<GetAllUsersQuery, HealthMonitoring.SharedKernel.Results.Result<System.Collections.Generic.List<Application.DTOs.UserDto>>> getAllUsersHandler)
+            IQueryHandler<GetAllUsersQuery, HealthMonitoring.SharedKernel.Results.Result<System.Collections.Generic.List<Application.DTOs.UserDto>>> getAllUsersHandler,
+            ICommandHandler<DeleteUserCommand, HealthMonitoring.SharedKernel.Results.Result> deleteUserHandler)
         {
             _createUserHandler = createUserHandler;
             _updateUserHandler = updateUserHandler;
@@ -41,6 +44,7 @@ namespace HealthMonitoring.Identity.API.Controllers
             _getUserByIdHandler = getUserByIdHandler;
             _getUserByUsernameHandler = getUserByUsernameHandler;
             _getAllUsersHandler = getAllUsersHandler;
+            _deleteUserHandler = deleteUserHandler;
         }
 
         [HttpGet]

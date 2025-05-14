@@ -1,5 +1,6 @@
 using System.Text;
 using HealthMonitoring.ApiGateway.Saga;
+using HealthMonitoring.ApiGateway.Saga.Steps;
 using HealthMonitoring.SharedKernel.Authentication;
 using HealthMonitoring.SharedKernel.ErrorHandling;
 using HealthMonitoring.SharedKernel.Logging;
@@ -60,6 +61,11 @@ builder.Services.AddHttpClient("PatientService", client =>
 // Saga services
 builder.Services.AddScoped<ISagaCoordinator, SagaCoordinator>();
 builder.Services.AddScoped<CreateUserWithRoleSaga>();
+builder.Services.AddScoped<CreatePatientWithUserSaga>();
+builder.Services.AddScoped<CreateUserStep>();
+builder.Services.AddScoped<CreatePatientUserStep>(); // Yeni eklenen adım
+builder.Services.AddScoped<CreateStaffMemberStep>();
+builder.Services.AddScoped<CreatePatientStep>();
 
 // Swagger/OpenAPI Konfigürasyonu
 builder.Services.AddEndpointsApiExplorer();

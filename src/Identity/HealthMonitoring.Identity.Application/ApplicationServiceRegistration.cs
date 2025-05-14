@@ -26,6 +26,7 @@ namespace HealthMonitoring.Identity.Application
             services.AddScoped<ICommandHandler<Commands.ChangePasswordCommand, HealthMonitoring.SharedKernel.Results.Result>, ChangePasswordCommandHandler>();
             services.AddScoped<ICommandHandler<Commands.AssignRoleCommand, HealthMonitoring.SharedKernel.Results.Result>, AssignRoleCommandHandler>();
             services.AddScoped<ICommandHandler<Commands.RemoveRoleCommand, HealthMonitoring.SharedKernel.Results.Result>, RemoveRoleCommandHandler>();
+            services.AddScoped<ICommandHandler<Commands.DeleteUserCommand, HealthMonitoring.SharedKernel.Results.Result>, DeleteUserCommandHandler>();
 
             // Register query handlers
             services.AddScoped<IQueryHandler<Queries.GetUserByIdQuery, HealthMonitoring.SharedKernel.Results.Result<DTOs.UserDto>>, GetUserByIdQueryHandler>();

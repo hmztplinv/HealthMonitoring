@@ -7,12 +7,12 @@ namespace HealthMonitoring.ApiGateway.Saga
     {
         public CreatePatientWithUserSaga(
             ILogger<CreatePatientWithUserSaga> logger,
-            CreateUserStep createUserStep,
+            CreatePatientUserStep createPatientUserStep,
             CreatePatientStep createPatientStep) 
             : base(logger)
         {
             // Saga adımlarını ekle
-            AddStep(createUserStep);
+            AddStep(createPatientUserStep);
             AddStep(createPatientStep);
         }
     }
